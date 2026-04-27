@@ -8,10 +8,10 @@ import os
 # 1. Initialize the FastAPI application
 app = FastAPI(title="SubGuilt API", version="1.0")
 
-# Configure CORS to allow the internet (Vercel) to talk to this API
+# Configure CORS so the local React frontend can talk to this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["http://localhost:5173"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,7 +41,7 @@ class SubscriptionData(BaseModel):
 # 4. Health Check Endpoint
 @app.get("/")
 def read_root():
-    return {"status": "success", "message": "SubGuilt API is officially alive and running!"}
+    return {"status": "success", "message": "SubGuilt API is officially alive and running locally!"}
 
 # 5. Prediction Endpoint
 @app.post("/predict")

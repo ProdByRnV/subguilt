@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 function App() {
-  // 1. State to hold all form inputs
   const [formData, setFormData] = useState({
     monthly_cost_inr: 499,
     cancellation_difficulty: 3,
@@ -9,17 +8,24 @@ function App() {
     days_since_last_login: 15,
     login_freq_30d: 2,
     avg_session_duration_mins: 10,
-    feature_usage_pct: 0.2, // 20%
+    feature_usage_pct: 0.2, 
     category: 'streaming',
     tier: 'Mid'
   })
 
-  // 2. State to hold the API response
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [apiStatus, setApiStatus] = useState("Checking local connection...")
 
-  // 3. Handle input changes
+  // Ping the local Python server on load
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/')
+      .then(response => response.json())
+      .then(data => setApiStatus("Live on Localhost!"))
+      .catch(error => setApiStatus("Server offline or CORS blocked."))
+  }, [])
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -28,17 +34,14 @@ function App() {
     }))
   }
 
-  // 4. Submit to FastAPI
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     setResult(null)
 
-    // Automatically grab the current month for the model
     const currentMonth = new Date().getMonth() + 1
 
-    // Map the user-friendly dropdowns to the exact 14 features the model needs
     const payload = {
       monthly_cost_inr: formData.monthly_cost_inr,
       cancellation_difficulty: formData.cancellation_difficulty,
@@ -48,19 +51,16 @@ function App() {
       login_freq_30d: formData.login_freq_30d,
       avg_session_duration_mins: formData.avg_session_duration_mins,
       feature_usage_pct: formData.feature_usage_pct,
-      
-      // One-hot encoding mapping for Category
       service_category_news: formData.category === 'news' ? 1 : 0,
       service_category_other: formData.category === 'other' ? 1 : 0,
       service_category_saas: formData.category === 'saas' ? 1 : 0,
       service_category_streaming: formData.category === 'streaming' ? 1 : 0,
-      
-      // One-hot encoding mapping for Price Tier
       price_tier_Mid: formData.tier === 'Mid' ? 1 : 0,
       price_tier_Premium: formData.tier === 'Premium' ? 1 : 0,
     }
 
     try {
+      // Pointing directly to the local Python backend
       const response = await fetch('http://127.0.0.1:8000/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,14 +85,14 @@ function App() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-indigo-400 tracking-tight mb-2">SubGuilt</h1>
-          <p className="text-lg text-gray-400">Calculate the brutal truth about your subscriptions.</p>
+          <p className="text-lg text-gray-400 mb-2">Calculate the brutal truth about your subscriptions.</p>
+          <span className="text-xs bg-gray-800 text-gray-300 px-3 py-1 rounded-full border border-gray-700">API Status: {apiStatus}</span>
         </div>
 
         <div className="bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden">
           <div className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               
-              {/* Category & Tier */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Service Category</label>
@@ -113,7 +113,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Cost & Tenure */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Monthly Cost (₹)</label>
@@ -125,7 +124,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Usage Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Days Since Login</label>
@@ -141,7 +139,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Sliders */}
               <div className="space-y-4 pt-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1 flex justify-between">
@@ -164,7 +161,6 @@ function App() {
             </form>
           </div>
 
-          {/* Results Section */}
           {error && (
             <div className="bg-red-900/50 border-t border-red-800 p-6 text-red-200 text-center">
               Error: {error}
