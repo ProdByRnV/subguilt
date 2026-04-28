@@ -58,7 +58,6 @@ export default function Dashboard() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Main Guilt Score Card */}
           <div className={`col-span-1 md:col-span-3 p-8 rounded-2xl border ${isHighGuilt ? 'bg-red-900/20 border-red-500/50' : 'bg-green-900/20 border-green-500/50'}`}>
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div>
@@ -75,8 +74,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
-          {/* Metrics Cards */}
           <div className="bg-gray-900 border border-gray-800 p-6 rounded-xl">
             <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Watch Time</h3>
             <p className="text-3xl font-bold text-white mt-2">{data.metrics_analyzed.total_watch_time_mins} <span className="text-lg text-gray-500 font-normal">mins</span></p>

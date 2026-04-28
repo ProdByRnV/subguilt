@@ -8,14 +8,11 @@ import logging
 import joblib
 import pandas as pd
 import datetime
-
-# Import database setup
 from database import SessionLocal, DBSessionRecord, get_db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load the trained ML Model into memory
 try:
     ml_model = joblib.load('guilt_model.pkl')
     logger.info("Loaded ML Model successfully.")
@@ -37,7 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Pydantic Data Models ---
 class WatchSession(BaseModel):
     platform: str
     event_type: str
@@ -50,7 +46,6 @@ class TrackPayload(BaseModel):
     user_id: str
     sessions: List[WatchSession]
 
-# --- Endpoints ---
 @app.get("/")
 async def root():
     return {"status": "SubGuilt API is running and connected to Database.", "ml_model_loaded": ml_model is not None}
@@ -87,37 +82,26 @@ async def predict_guilt(user_id: str, db: Session = Depends(get_db)):
     if ml_model is None:
         raise HTTPException(status_code=503, detail="ML Model not loaded.")
 
-    # 1. Fetch user data from database
     sessions = db.query(DBSessionRecord).filter(DBSessionRecord.user_id == user_id).all()
     
     if not sessions:
         return {"user_id": user_id, "guilt_score": 100, "message": "No watch history found. 100% Guilt. Cancel immediately."}
 
-    # 2. Engineer features for the model
     total_watch_time = sum(session.duration_minutes for session in sessions)
     avg_session_duration = total_watch_time / len(sessions)
-    
-    # Calculate days since last session
     latest_session_str = max(session.session_end for session in sessions)
-    # Handle the ISO string parsing safely
     latest_date = datetime.datetime.fromisoformat(latest_session_str.replace("Z", "+00:00")).replace(tzinfo=None)
     days_since_last = (datetime.datetime.utcnow() - latest_date).days
-
-    # Prevent negative days if there's a timezone quirk
     days_since_last = max(0, days_since_last)
 
-    # 3. Format for the model
     input_features = pd.DataFrame([{
         'total_watch_time': total_watch_time,
         'days_since_last_session': days_since_last,
         'avg_session_duration': avg_session_duration
     }])
 
-    # 4. Predict
-    # predict_proba returns an array like [[prob_class_0, prob_class_1]]
     cancel_probability = ml_model.predict_proba(input_features)[0][1] 
     
-    # Convert probability to a 0-100 Guilt Score
     guilt_score = round(cancel_probability * 100, 1)
 
     return {
