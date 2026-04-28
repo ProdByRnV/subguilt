@@ -1,4 +1,22 @@
-node_modules/
-frontend/node_modules/
+# Python / Backend
 __pycache__/
-.env
+*.py[cod]
+*.sqlite3
+*.db
+backend/subguilt.db
+backend/guilt_model.pkl
+
+# Virtual Environments
+venv/
+env/
+
+# Next.js / Frontend
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+dashboard/.env
+dashboard/.env.local
+
+# OS Files
+.DS_Store
+Thumbs.db

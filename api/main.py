@@ -5,10 +5,8 @@ import joblib
 import pandas as pd
 import os
 
-# 1. Initialize the FastAPI application
 app = FastAPI(title="SubGuilt API", version="1.0")
 
-# Configure CORS so the local React frontend can talk to this backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],  
@@ -17,11 +15,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Define the path to your model
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "../models/subguilt_xgboost_v1.0.pkl")
 model = joblib.load(MODEL_PATH)
 
-# 3. Define the expected data format
 class SubscriptionData(BaseModel):
     monthly_cost_inr: float
     cancellation_difficulty: int
@@ -38,12 +34,10 @@ class SubscriptionData(BaseModel):
     price_tier_Mid: int
     price_tier_Premium: int
 
-# 4. Health Check Endpoint
 @app.get("/")
 def read_root():
     return {"status": "success", "message": "SubGuilt API is officially alive and running locally!"}
 
-# 5. Prediction Endpoint
 @app.post("/predict")
 def predict_guilt(data: SubscriptionData):
     try:
